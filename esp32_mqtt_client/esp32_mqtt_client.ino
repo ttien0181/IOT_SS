@@ -1,151 +1,118 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <DHT.h>
 
-// Replace the SSID/Password details as per your wifi router
-const char *ssid = "SSIoT-02";
-const char *password = "SSIoT-02";
+// WiFi credentials
+const char* ssid = "SSIoT-02";
+const char* password = "SSIoT-02";
 
-// Replace your MQTT Broker IP address here:
-const char *mqtt_server = "172.20.10.5";
+// MQTT Broker settings
+const char* mqtt_server = "5c5eba53f92a499ca18b75d10b64c1b8.s1.eu.hivemq.cloud";
+const int mqtt_port = 8883;
+const char* mqtt_user = "dht11_user";
+const char* mqtt_password = "K6_RR9@M2yr2X4w";
+const char* mqtt_client_id = "ESP32_DHT11_Client";
 
-WiFiClient espClient;
+// MQTT topics
+const char* temperature_topic = "sensor/dht11/temperature";
+const char* humidity_topic = "sensor/dht11/humidity";
+
+// DHT11 settings
+#define DHTPIN 12
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// Create WiFiClientSecure and PubSubClient
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
+unsigned long lastMsg = 0;
 
-long lastMsg = 0;
-
-#define ledPin 2
-
-void blink_led(unsigned int times, unsigned int duration)
-{
-    for (int i = 0; i < times; i++)
-    {
-        digitalWrite(ledPin, HIGH);
-        delay(duration);
-        digitalWrite(ledPin, LOW);
-        delay(200);
-    }
+void setup_wifi() {
+  delay(10);
+  Serial.println("Connecting to WiFi...");
+  WiFi.mode(WIFI_STA); 
+  WiFi.begin(ssid, password);
+  unsigned long wifiTimeout = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - wifiTimeout < 10000) {  // Timeout 10 giây
+    delay(500);
+    Serial.print(".");
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected");
+    Serial.println("IP address: " + WiFi.localIP().toString());
+  } else {
+    Serial.println("\nWiFi connection failed!");
+  }
 }
 
-void setup_wifi()
-{
-    delay(50);
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-
-    int c = 0;
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        blink_led(2, 200); // blink LED twice (for 200ms ON time) to indicate that wifi not connected
-        delay(1000);       //
-        Serial.print(".");
-        c = c + 1;
-        if (c > 10)
-        {
-            ESP.restart(); // restart ESP after 10 seconds
-        }
-    }
-
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (unsigned int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
 }
 
-void connect_mqttServer()
-{
-    // Loop until we're reconnected
-    while (!client.connected())
-    {
-
-        // first check if connected to wifi
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            // if not connected, then first connect to wifi
-            setup_wifi();
-        }
-
-        // now attemt to connect to MQTT server
-        Serial.print("Attempting MQTT connection...");
-        // Attempt to connect
-        if (client.connect("ESP32_client1"))
-        { // Change the name of client here if multiple ESP32 are connected
-            // attempt successful
-            Serial.println("connected");
-            // Subscribe to topics here
-            client.subscribe("rpi/broadcast");
-            // client.subscribe("rpi/xyz"); //subscribe more topics here
-        }
-        else
-        {
-            // attempt not successful
-            Serial.print("failed, rc=");
-            Serial.print(client.state());
-            Serial.println(" trying again in 2 seconds");
-
-            blink_led(3, 200); // blink LED three times (200ms on duration) to show that MQTT server connection attempt failed
-            // Wait 2 seconds before retrying
-            delay(2000);
-        }
+void reconnect() {
+  while (!client.connected() && WiFi.status() == WL_CONNECTED) {
+    Serial.print("Attempting MQTT connection...");
+    if (client.connect(mqtt_client_id, mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
     }
+  }
 }
 
-// this function will be executed whenever there is data available on subscribed topics
-void callback(char *topic, byte *message, unsigned int length)
-{
-    Serial.print("Message arrived on topic: ");
-    Serial.print(topic);
-    Serial.print(". Message: ");
-    String messageTemp;
+void setup() {
+  Serial.begin(115200);
+  delay(2000);  // Wait for DHT11 to stabilize
+  dht.begin();
+  setup_wifi();
 
-    for (int i = 0; i < length; i++)
-    {
-        Serial.print((char)message[i]);
-        messageTemp += (char)message[i];
-    }
-    Serial.println();
-
-    // Check if a message is received on the topic "rpi/broadcast"
-    if (String(topic) == "rpi/broadcast")
-    {
-        if (messageTemp == "10")
-        {
-            Serial.println("Action: blink LED");
-            blink_led(1, 1250); // blink LED once (for 1250ms ON time)
-        }
-    }
-
-    // Similarly add more if statements to check for other subscribed topics
+  // Skip CA from HiveMQ (for testing only)
+  espClient.setInsecure();
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
 }
 
-void setup()
-{
-    pinMode(ledPin, OUTPUT);
-    Serial.begin(115200);
-
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected, attempting to reconnect...");
     setup_wifi();
-    client.setServer(mqtt_server, 1883); // 1883 is the default port for MQTT server
-    client.setCallback(callback);
-}
+  }
 
-void loop()
-{
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
-    if (!client.connected())
-    {
-        connect_mqttServer();
+  unsigned long now = millis();
+  if (now - lastMsg > 5000) {  // Send data every 5 seconds
+    lastMsg = now;
+
+    float temperature = dht.readTemperature();
+    float humidity = dht.readHumidity();
+
+    if (isnan(temperature) || isnan(humidity)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
     }
 
-    client.loop();
+    // Publish temperature
+    char temp_str[10];
+    dtostrf(temperature, 6, 2, temp_str);
 
-    long now = millis();
-    if (now - lastMsg > 4000)
-    {
-        lastMsg = now;
+    // Publish humidity
+    char hum_str[10];
+    dtostrf(humidity, 6, 2, hum_str);
 
-        client.publish("esp32/sensor1", "88"); // topic name (to which this ESP32 publishes its data). 88 is the dummy value.
-    }
+    Serial.printf("Temperature: %s °C, Humidity: %s %%\n", temp_str, hum_str);
+  }
 }
