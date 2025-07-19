@@ -19,7 +19,7 @@ const char* temperature_topic = "sensor/dht11/temperature";
 const char* humidity_topic = "sensor/dht11/humidity";
 
 // DHT11 settings
-#define DHTPIN 12
+#define DHTPIN 14
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -34,7 +34,7 @@ void setup_wifi() {
   WiFi.mode(WIFI_STA); 
   WiFi.begin(ssid, password);
   unsigned long wifiTimeout = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - wifiTimeout < 10000) {  // Timeout 10 giây
+  while (WiFi.status() != WL_CONNECTED && millis() - wifiTimeout < 10000) {  // Timeout 10 seconds
     delay(500);
     Serial.print(".");
   }
