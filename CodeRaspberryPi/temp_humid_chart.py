@@ -7,7 +7,7 @@ app = Flask(__name__)
 DB = dict(host='localhost', user='ttien', password='0181', db='iot02',
           charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 
-def get_rows(limit=100): # hàm có tên get_rows, nhận tham số giới hạn số dòng trả về "limit" (mặc định là 100).
+def get_rows(limit=50): # hàm có tên get_rows, nhận tham số giới hạn số dòng trả về "limit" (mặc định là 100).
     conn = pymysql.connect(**DB) # **DB là cú pháp giải nén từ dictionary thành các đối số riêng lẻ cho hàm pymysql.connect().
 
     # with ... as cur::  Đây là cú pháp quản lý ngữ cảnh (context manager), 
@@ -18,7 +18,7 @@ def get_rows(limit=100): # hàm có tên get_rows, nhận tham số giới hạn
         # iterable các tham số: là list, tuple, string, set, dict... là các đối tượng có thể lặp qua từng phần tử
         # cur.execute cần truyền vào 1 iterable để thay thế lần lượt vào %s trong câu lệnh SQL theo thứ tự
         # nếu chỉ có 1 phần tử, cần thêm "," để thư viện biết đó là tuple
-        cur.execute("SELECT datetime, temp, humid FROM dht_data ORDER BY datetime DESC LIMIT %s", (limit,))
+        cur.execute("SELECT datetime, temp, humid FROM temp_humid_data ORDER BY datetime DESC LIMIT %s", (limit,))
         
         
         rows = cur.fetchall() # lấy tất cả dòng kết quả.
