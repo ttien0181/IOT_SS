@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IoT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>IoT Web System</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/sensor">Sensor</a>
+            <a href="/control">Control</a>
+            <a href="/about">About</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Sensor Data</h2>
+<table border="1">
+    <tr><th>ID</th><th>Time</th><th>Temp</th><th>Humid</th></tr>
+    {% for row in data %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.datetime }}</td>
+            <td>{{ row.temperature }}</td>
+            <td>{{ row.humidity }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

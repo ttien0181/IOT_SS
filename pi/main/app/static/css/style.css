@@ -1,0 +1,42 @@
+/* Sidebar cố định bên trái */
+.sidebar.fixed {
+  width: 220px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #00695c;
+  padding-top: 20px;
+  overflow-x: hidden;
+}
+
+.sidebar-title {
+  color: white;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.sidebar a {
+  padding: 12px 20px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #fff;
+  display: block;
+  transition: background-color 0.2s;
+}
+
+.sidebar a:hover {
+  background-color: #257a6f;
+}
+
+.sidebar a.active {
+  background-color: #257a6f;
+  color: #fff;
+}
+
+
+/* Nội dung chính dịch sang phải để tránh đè lên nav */
+#main-content-fixed {
+  margin-left: 220px;
+  padding: 20px;
+}

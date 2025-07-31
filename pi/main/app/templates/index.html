@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Realtime Dashboard{% endblock %}
+{% block content %}
+  <h1>IoT Realtime Dashboard</h1>
+
+  <div class="box">
+    <p>Temperature:</p>
+    <div id="temperature_label" class="value">-- °C</div>
+  </div>
+
+  <div class="box">
+    <p>Humidity :</p>
+    <div id="humidity_label" class="value">-- %</div>
+  </div>
+
+  <script>
+    const socket = io();
+    socket.on("sensor_update", (data) => {
+      document.getElementById("temperature_label").innerText = data.temperature + " °C";
+      document.getElementById("humidity_label").innerText = data.humidity + " %";
+    });
+  </script>
+{% endblock %}

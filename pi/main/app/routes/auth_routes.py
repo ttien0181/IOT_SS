@@ -1,0 +1,64 @@
+# auth.py
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.user_model import find_user_by_email, validate_user, create_user
+
+# Tạo một Blueprint cho các route xác thực.
+# Blueprint giúp tổ chức các route và module code của ứng dụng.
+auth_bp = Blueprint('auth', __name__)
+
+# ---
+## Route đăng ký người dùng
+# Xử lý cả yêu cầu GET (hiển thị form) và POST (xử lý dữ liệu form).
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    # Kiểm tra nếu yêu cầu là POST (người dùng đã gửi form đăng ký)
+    if request.method == 'POST':
+        # Lấy email từ dữ liệu form
+        email = request.form['email']
+        # Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu để bảo mật
+        password = request.form['password']
+
+        # nếu thấy email -> email đã từng dùng
+        if find_user_by_email(email):
+            flash("Email đã từng được đăng ký.")
+            return redirect(url_for('auth.register'))
+        
+        # nếu ko, tạo user, cho về login
+        create_user(email, password)
+        flash("Đăng ký thành công!")
+        return redirect(url_for('auth.login'))
+    
+    # Nếu yêu cầu là GET, hiển thị trang đăng ký
+    return render_template('register.html')
+
+# ---
+## Route đăng nhập người dùng
+# Xử lý cả yêu cầu GET (hiển thị form) và POST (xử lý dữ liệu form).
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    # Kiểm tra nếu yêu cầu là POST (người dùng đã gửi form đăng nhập)
+    if request.method == 'POST':
+        # Lấy email và mật khẩu từ dữ liệu form
+        email = request.form['email']
+        password = request.form['password']
+
+        user = validate_user(email, password)
+        if user:
+            print("Session before login:", session)
+            session['user_id'] = user['id']
+            print("Session after login:", session)
+            return redirect(url_for('main.index'))
+        
+        flash("Sai email hoặc mật khẩu")
+    # Nếu yêu cầu là GET, hiển thị trang đăng nhập
+    return render_template('login.html')
+
+# ---
+## Route đăng xuất người dùng
+@auth_bp.route('/logout')
+def logout():
+    # Xóa tất cả dữ liệu trong session để đăng xuất người dùng
+    session.clear()
+    # Chuyển hướng người dùng về trang đăng nhập
+    return redirect(url_for('auth.login'))

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}IoT Dashboard{% endblock %}</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar cố định -->
+    <div id="sidebar" class="sidebar fixed">
+    <h2 class="sidebar-title">Menu</h2>
+    <a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">Realtime</a>
+    <a href="{{ url_for('main.user') }}" class="{% if request.endpoint == 'main.user' %}active{% endif %}">Lịch sử</a>
+    <!-- <button class="" -->
+    </div>
+
+
+
+  <!-- Nội dung trang -->
+  <div id="main-content-fixed">
+    {% block content %}{% endblock %}
+  </div>
+
+</body>
+</html>
