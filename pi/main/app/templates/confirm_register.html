@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Confirm Register</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- ✅ Dùng form-container để căn giữa và style đồng bộ -->
+  <div class="form-container">
+    <h2>Xác nhận đăng ký</h2>
+
+    <form method="POST">
+      <label>Nhập mã OTP đã gửi tới:</label>
+      <p><strong>{{ email }}</strong></p>
+
+      <input type="text" name="otp" placeholder="Mã OTP" required>
+
+      <button type="submit" class="btn-primary">Xác nhận</button>
+    </form>
+
+    <p>Quay lại <a href="{{ url_for('auth.login') }}">Đăng nhập</a></p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>  
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </div>
+
+</body>
+</html>

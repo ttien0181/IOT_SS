@@ -1,7 +1,7 @@
-# auth.py
+# auth_routers.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models.user_model import find_user_by_email, validate_user, create_user
+from app.models.user_model import find_user_by_email, validate_user, request_register, confirm_otp
 
 # Tạo một Blueprint cho các route xác thực.
 # Blueprint giúp tổ chức các route và module code của ứng dụng.
@@ -24,13 +24,29 @@ def register():
             flash("Email đã từng được đăng ký.")
             return redirect(url_for('auth.register'))
         
-        # nếu ko, tạo user, cho về login
-        create_user(email, password)
-        flash("Đăng ký thành công!")
-        return redirect(url_for('auth.login'))
+        # nếu ko, đưa về trang confirm_register chờ nhập OTP
+        request_register(email, password)
+        flash("Mã xác nhận đã được gửi đến email của bạn. Vui lòng nhập OTP để hoàn tất đăng ký.")
+        return redirect(url_for('auth.confirm_register', email=email))
     
     # Nếu yêu cầu là GET, hiển thị trang đăng ký
     return render_template('register.html')
+
+@auth_bp.route('/confirm_register', methods=['GET', 'POST'])
+def confirm_register():
+    email = request.args.get('email')  # Lấy email từ URL query
+
+    if request.method == 'POST':
+        otp = request.form['otp']
+        if confirm_otp(email, otp):
+            flash("Đăng ký thành công! Vui lòng đăng nhập.")
+            return redirect(url_for('auth.login'))
+        else:
+            flash("Mã xác nhận không đúng hoặc đã hết hạn.")
+            return redirect(url_for('auth.confirm_register', email=email))
+
+    return render_template('confirm_register.html', email=email)
+
 
 # ---
 ## Route đăng nhập người dùng
@@ -54,6 +70,8 @@ def login():
     # Nếu yêu cầu là GET, hiển thị trang đăng nhập
     return render_template('login.html')
 
+
+
 # ---
 ## Route đăng xuất người dùng
 @auth_bp.route('/logout')
@@ -62,3 +80,4 @@ def logout():
     session.clear()
     # Chuyển hướng người dùng về trang đăng nhập
     return redirect(url_for('auth.login'))
+

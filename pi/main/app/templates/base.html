@@ -3,25 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}IoT Dashboard{% endblock %}</title>
+
+  <!-- Thư viện Socket.io -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+  <!-- File CSS chung -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Script JavaScript để xử lý menu dạng cây -->
+  <!-- Script JavaScript để xử lý menu dạng cây với LocalStorage -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      
+      // Hàm lưu trạng thái menu vào LocalStorage
+      function saveMenuState() {
+        const openMenus = [];
+        const activeDropdowns = document.querySelectorAll('.dropdown-btn.active');
+        
+        activeDropdowns.forEach(btn => {
+          // Tạo ID duy nhất cho mỗi button dựa trên text content
+          const menuId = btn.textContent.trim().replace(/\s+/g, '_');
+          openMenus.push(menuId);
+        });
+        
+        // Lưu vào LocalStorage
+        localStorage.setItem('sidebarMenuState', JSON.stringify(openMenus));
+        console.log('Đã lưu trạng thái menu:', openMenus); // Debug
+      }
+      
+      // Hàm khôi phục trạng thái menu từ LocalStorage
+      function restoreMenuState() {
+        const savedMenus = localStorage.getItem('sidebarMenuState');
+        if (!savedMenus) {
+          console.log('Không có trạng thái menu đã lưu'); // Debug
+          return;
+        }
+        
+        try {
+          const openMenus = JSON.parse(savedMenus);
+          console.log('Khôi phục trạng thái menu:', openMenus); // Debug
+          
+          openMenus.forEach(menuId => {
+            const buttons = document.querySelectorAll('.dropdown-btn');
+            buttons.forEach(btn => {
+              const btnId = btn.textContent.trim().replace(/\s+/g, '_');
+              if (btnId === menuId) {
+                // Mở menu này
+                btn.classList.add('active');
+                const dropdownContent = btn.nextElementSibling;
+                if (dropdownContent && dropdownContent.classList.contains('dropdown-container')) {
+                  dropdownContent.style.display = 'block';
+                  console.log('Đã mở menu:', menuId); // Debug
+                }
+              }
+            });
+          });
+        } catch(e) {
+          console.log('Lỗi khi khôi phục trạng thái menu:', e);
+          // Xóa dữ liệu lỗi
+          localStorage.removeItem('sidebarMenuState');
+        }
+      }
+      
+      // BƯỚC 1: Khôi phục trạng thái menu khi trang load
+      restoreMenuState();
+      
+      // BƯỚC 2: Xử lý click dropdown với lưu trạng thái
+      var dropdowns = document.getElementsByClassName("dropdown-btn");
+      for (var i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].addEventListener("click", function() {
+          // Toggle active để đổi màu nút cha khi mở
+          this.classList.toggle("active");
+          // Lấy menu con tương ứng và ẩn/hiện nó
+          var dropdownContent = this.nextElementSibling;
+          
+          // nếu đang mở, ẩn đi
+          if (dropdownContent.style.display === "block") {
+            dropdownContent.style.display = "none";
+          } else {
+            // nếu đang ẩn, hiện ra
+            dropdownContent.style.display = "block";
+          }
+          
+          // LƯU TRẠNG THÁI sau mỗi lần click
+          saveMenuState();
+        });
+      }
+      
+      // BƯỚC 3: (Tùy chọn) Xóa trạng thái khi đăng xuất
+      const logoutLinks = document.querySelectorAll('[href*="logout"]');
+      logoutLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          localStorage.removeItem('sidebarMenuState');
+          console.log('Đã xóa trạng thái menu khi logout');
+        });
+      });
+    });
+  </script>
 </head>
 <body>
 
   <!-- Sidebar cố định -->
-    <div id="sidebar" class="sidebar fixed">
+  <div id="sidebar" class="sidebar fixed">
     <h2 class="sidebar-title">Menu</h2>
-    <a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">Realtime</a>
-    <a href="{{ url_for('main.user') }}" class="{% if request.endpoint == 'main.user' %}active{% endif %}">Lịch sử</a>
-    <!-- <button class="" -->
+
+    <!-- Trang Realtime -->
+    <a href="{{ url_for('main.index') }}" 
+       class="{% if request.endpoint == 'main.index' %}active{% endif %}">
+       Realtime
+    </a>
+
+
+    <!-- ========== Tree Menu bắt đầu ========== -->
+    <!-- Nút cha lớn nhất (ví dụ: Building) -->
+    <button class="dropdown-btn">
+      Bach Mai
+    </button>
+
+    <!-- Cây con: Floors -->
+    <div class="dropdown-container">
+      <!-- Floor 1 -->
+      <button class="dropdown-btn">
+        Building A1
+      </button>
+      <div class="dropdown-container">
+        <!-- Floor 1 -->
+        <button class="dropdown-btn">
+          Floor 1
+        </button>
+        <div class="dropdown-container">
+          <a href="{{ url_for('main.dashboard',building='A1', floor='1', room='101') }}"
+            class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '101' %}active{% endif %}">
+            Room 101
+          </a>
+          <a href="{{ url_for('main.dashboard',building='A1', floor='1', room='102') }}"
+            class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '102' %}active{% endif %}">
+            Room 102
+          </a>
+        </div>
+
+        <!-- Floor 2 -->
+        <button class="dropdown-btn">
+          Floor 2
+        </button>
+        <div class="dropdown-container">
+          <a href="{{ url_for('main.dashboard',building='A1', floor='2', room='201') }}"
+            class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '201' %}active{% endif %}">
+            Room 201
+          </a>
+          <a href="{{ url_for('main.dashboard',building='A1', floor='2', room='202') }}"
+            class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '202' %}active{% endif %}">
+            Room 202
+          </a>
+        </div>
+      </div>    
     </div>
-
-
+    <!-- ========== Tree Menu kết thúc ========== -->
+    <!-- Trang Logout -->
+    <a href="{{ url_for('auth.logout') }}" 
+       class="{% if request.endpoint == 'auth.logout' %}active{% endif %}">
+       Logout
+    </a>
+    
+  </div>
+  <!-- Kết thúc sidebar -->
 
   <!-- Nội dung trang -->
   <div id="main-content-fixed">
     {% block content %}{% endblock %}
   </div>
-
+  
 </body>
 </html>

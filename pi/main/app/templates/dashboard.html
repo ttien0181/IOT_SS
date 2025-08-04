@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Temperature & Humidity Chart{% endblock %}
+
+{% block content %}
+  <h2>Temperature & Humidity (Last 50)</h2>
+
+  <!-- Khung chứa biểu đồ -->
+  <div class="box" style="width: 90%; max-width: 900px;">
+    <canvas id="myChart"></canvas>
+  </div>
+
+  <!-- Nạp Chart.js từ CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // lấy floor, room từ main_route
+    const building = "{{building}}"
+    const floor = "{{floor}}";
+    const room = "{{room}}";
+
+    // Gửi yêu cầu HTTP GET tới API Flask để lấy dữ liệu JSON 
+    // dùng chuỗi nội suy của JS (phải dùng `` thay vì '' hay "")
+    fetch(`/get_data?building=${building}&floor=${floor}&room=${room}&type=temperature&type=humidity`)
+      .then(r => r.json()) 
+      .then(d => {
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        new Chart(ctx, {
+          type: 'line', // Biểu đồ dạng đường
+          data: {
+            labels: d.labels,
+            datasets: [
+              {
+                label: 'Temp (°C)',
+                data: d.temperature,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+              },
+              {
+                label: 'Humid (%)',
+                data: d.humidity,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+              }
+            ]
+          },
+          options: {
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' }
+            },
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      });
+  </script>
+{% endblock %}

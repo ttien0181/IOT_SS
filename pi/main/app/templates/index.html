@@ -1,23 +1,204 @@
 {% extends "base.html" %}
 {% block title %}Realtime Dashboard{% endblock %}
 {% block content %}
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f6fc;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 2rem;
+    }
+
+    form#topic_form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      background-color: #ffffff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 2rem;
+    }
+
+    form label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+      color: #34495e;
+    }
+
+    form select {
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 120px;
+    }
+
+    form button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+
+    form button:hover {
+      background-color: #2980b9;
+    }
+
+    .box {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    #data_label {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    #value_display {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #e67e22;
+    }
+  </style>
+
   <h1>IoT Realtime Dashboard</h1>
 
-  <div class="box">
-    <p>Temperature:</p>
-    <div id="temperature_label" class="value">-- °C</div>
-  </div>
+  <form id="topic_form">
+    <label>Building:</label>
+    <select id="building">
+      <option value="A1">A1</option>
+    </select>
 
-  <div class="box">
-    <p>Humidity :</p>
-    <div id="humidity_label" class="value">-- %</div>
-  </div>
+    <label>Floor:</label>
+    <select id="floor">
+      <option value="1">1</option>
+      <option value="2">2</option>
+    </select>
+
+    <label>Room:</label>
+    <select id="room">
+      <option value="101">101</option>
+      <option value="102">102</option>
+    </select>
+
+    <label>Data Type:</label>
+    <select id="data_type">
+      <option value="temperature">Temperature</option>
+      <option value="humidity">Humidity</option>
+      <option value="spo2">SpO2</option>
+      <option value="heart_rate">Heartrate</option>
+      <option value="motion">Motion</option>
+    </select>
+
+    <button type="submit" class="btn-primary">Start</button>
+  </form>
+
+   <!-- div contains all box  -->
+  <div id="boxes_container"></div>
 
   <script>
     const socket = io();
-    socket.on("sensor_update", (data) => {
-      document.getElementById("temperature_label").innerText = data.temperature + " °C";
-      document.getElementById("humidity_label").innerText = data.humidity + " %";
+    let subscriptions = []; // save list of subscribed topics
+
+    // Mapping loại dữ liệu → đơn vị hiển thị
+    const dataUnits = {
+      temperature: "°C",
+      humidity: "%",
+      spo2: "%",
+      heart_rate: "bpm"  
+    };
+    
+    function removeBox(boxId){
+      // Xóa box khỏi giao diện
+      const box = document.getElementById(boxId);
+      if (box) {
+        box.remove();
+      }
+
+      // Xóa box khỏi danh sách subscriptions
+      subscriptions = subscriptions.filter(sub => sub.boxId !== boxId);
+    }
+
+    // gán sự kiện cho button "submit"
+    document.getElementById("topic_form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const building = document.getElementById("building").value;
+      const floor = document.getElementById("floor").value;
+      const room = document.getElementById("room").value;
+      const dataType = document.getElementById("data_type").value;
+
+      // make box Id
+      const boxId = `${building}_${floor}_${room}_${dataType}`;
+
+      // if this box already exists, skip it
+      if(document.getElementById(boxId)){
+        alert("This box already exists!")
+        return;
+      }
+
+      // send subscribe message to server
+      socket.emit("subscribe_topic", {
+        building,
+        floor,
+        room,
+        data_type: dataType
+      });
+
+      // { 
+      //   boxId: boxId,
+      //   dataType: dataType
+      // }
+      subscriptions.push({boxId, dataType}) // add to subcription list
+
+      // Tạo box mới
+      const container = document.getElementById("boxes_container");// get the HTML element with id = ...
+      const box = document.createElement("div");// create a new HTML element of type <div> using JS
+      box.className = "box";// assign the css class "box" to the newly created div
+      box.id = boxId;// set Id for box
+      // add HTML content inside the box
+      // show dataType, capitalize the first letter
+      // add value_display div
+      box.innerHTML = `
+        <button class="close-btn" onclick="removeBox('${boxId}')">&times;</button>
+        <p class="data_label">${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${building}-${floor}-${room})</p>
+        <div class="value_display">--</div>
+      `;
+      container.appendChild(box); // add "box" to "boxes_container"
     });
+
+    socket.on("sensor_update", (data) => { // register callback "sensor_update" with data(from server)
+      subscriptions.forEach(sub => { // each "sub" in "subcriptions"
+        if (data[sub.dataType] !== undefined) { // if data has the key "sub.dataType"
+          const suffix = dataUnits[sub.dataType] || ""; // find the right unit, if not, assign empty string
+          const box = document.getElementById(sub.boxId);// find the correct box
+          if (box) {
+            box.querySelector(".value_display").innerText = // find the div tag "value_display"
+              data[sub.dataType] + " " + suffix; // replace current content
+          }
+        }
+      });
+    });
+
   </script>
+
 {% endblock %}
