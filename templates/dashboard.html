@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --heart-rate: #e63946;
+            --blood-pressure: #7209b7;
+            --oxygen: #3a86ff;
+            --temperature: #f3722c;
+            --stable: #2a9d8f;
+            --critical: #e63946;
+            --warning: #f4a261;
+        }
+        
+        .vital-card {
+            transition: all 0.3s;
+            min-height: 180px;
+        }
+        
+        .vital-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .heart-rate { color: var(--heart-rate); }
+        .blood-pressure { color: var(--blood-pressure); }
+        .oxygen { color: var(--oxygen); }
+        .temperature { color: var(--temperature); }
+        
+        /* .pulse {
+            animation: pulse 1.5s infinite;
+        }
+         */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .highlight {
+            animation: highlight 1s;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(74, 144, 226, 0.3); }
+            100% { background-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-5 fw-bold">Patient Monitoring</h1>
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="text-muted mb-0">Last update: <span id="update-time">Never</span></p>
+                    <span id="connection-status" class="badge rounded-pill bg-secondary">
+                        <i class="bi bi-circle-fill me-1"></i>
+                        <span>Connecting</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-alert" class="alert alert-danger alert-dismissible fade d-none" role="alert">
+            <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Error:</strong>
+            <span id="error-message"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div id="content-area">
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Initializing monitoring system...</p>
+            </div>
+
+            <!-- Data State -->
+            <div id="data-state" class="d-none">
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h2 class="h5 mb-0"><i class="bi bi-person-vcard me-2"></i>Patient Info</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <p class="mb-1 text-muted small">Patient ID</p>
+                                        <h3 id="patient-id" class="h4">-</h3>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-muted small">Status</p>
+                                        <div id="patient-status" class="badge rounded-pill bg-secondary">UNKNOWN</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h2 class="h5 mb-0"><i class="bi bi-clock me-2"></i>Last Reading</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                        <p class="mb-1 text-muted small">Time</p>
+                                        <h3 id="reading-time" class="h4">-</h3>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1 text-muted small">Data Age</p>
+                                        <h3 id="data-age" class="h4">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card vital-card pulse">
+                            <div class="card-body text-center">
+                                <h3 class="h6 text-muted mb-3"><i class="bi bi-heart-pulse me-2"></i>Heart Rate</h3>
+                                <div id="heart-rate" class="vital-value heart-rate">--</div>
+                                <small class="text-muted">BPM</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card vital-card">
+                            <div class="card-body text-center">
+                                <h3 class="h6 text-muted mb-3"><i class="bi bi-speedometer2 me-2"></i>Blood Pressure</h3>
+                                <div id="blood-pressure" class="vital-value blood-pressure">--/--</div>
+                                <small class="text-muted">mmHg</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card vital-card">
+                            <div class="card-body text-center">
+                                <h3 class="h6 text-muted mb-3"><i class="bi bi-droplet me-2"></i>SpO₂</h3>
+                                <div id="spo2" class="vital-value oxygen">--</div>
+                                <small class="text-muted">%</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card vital-card">
+                            <div class="card-body text-center">
+                                <h3 class="h6 text-muted mb-3"><i class="bi bi-thermometer-half me-2"></i>Temperature</h3>
+                                <div id="temperature" class="vital-value temperature">--</div>
+                                <small class="text-muted">°C</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize empty state
+        const state = {
+            timestamp: null,
+            patientData: null,
+            error: null
+        };
+
+        // DOM Elements
+        const elements = {
+            loading: document.getElementById('loading-state'),
+            dataState: document.getElementById('data-state'),
+            errorAlert: document.getElementById('error-alert'),
+            errorMessage: document.getElementById('error-message'),
+            connectionStatus: document.getElementById('connection-status'),
+            updateTime: document.getElementById('update-time'),
+            patientId: document.getElementById('patient-id'),
+            patientStatus: document.getElementById('patient-status'),
+            readingTime: document.getElementById('reading-time'),
+            dataAge: document.getElementById('data-age'),
+            heartRate: document.getElementById('heart-rate'),
+            bloodPressure: document.getElementById('blood-pressure'),
+            spo2: document.getElementById('spo2'),
+            temperature: document.getElementById('temperature')
+        };
+
+        // Initialize with template data if available
+        function initializeTemplateData() {
+            try {
+                // Safely get template variables
+                const templateData = {
+                    timestamp: "{{ data.timestamp or '' }}",
+                    patientData: JSON.parse(`{{ data.patient_data|tojson|safe if data.patient_data else 'null' }}`),
+                    error: "{{ data.error or '' }}"
+                };
+
+                if (templateData.patientData) {
+                    updateState(templateData);
+                }
+            } catch (e) {
+                console.error("Template initialization error:", e);
+                showError("Initial data loading failed");
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected, message = '') {
+            const icon = connected ? 'check-circle-fill' : 'x-circle-fill';
+            const color = connected ? 'success' : 'danger';
+            elements.connectionStatus.innerHTML = `<i class="bi bi-${icon} me-1"></i><span>${message || (connected ? 'Connected' : 'Disconnected')}</span>`;
+            elements.connectionStatus.className = `badge rounded-pill bg-${color}`;
+        }
+
+        // Show error message
+        function showError(message) {
+            if (!message) {
+                elements.errorAlert.classList.add('d-none');
+                return;
+            }
+            
+            elements.errorMessage.textContent = message;
+            elements.errorAlert.classList.remove('d-none');
+            
+            // Initialize Bootstrap alert if needed
+            if (!elements.errorAlert._alert) {
+                new bootstrap.Alert(elements.errorAlert);
+            }
+        }
+
+        // Calculate time since
+        function getTimeSince(timestamp) {
+            if (!timestamp) return 'Unknown';
+            
+            const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
+            if (seconds < 60) return `${seconds} sec ago`;
+            if (seconds < 3600) return `${Math.floor(seconds/60)} min ago`;
+            if (seconds < 86400) return `${Math.floor(seconds/3600)} hr ago`;
+            return `${Math.floor(seconds/86400)} days ago`;
+        }
+
+        // Animate value change
+        function animateValue(element, newValue) {
+            if (element.textContent !== String(newValue)) {
+                element.classList.add('highlight');
+                setTimeout(() => {
+                    element.textContent = newValue;
+                    element.classList.remove('highlight');
+                }, 300);
+            }
+        }
+
+        // Update UI with new state
+        function updateUI() {
+            // Update connection status
+            updateConnectionStatus(!state.error);
+            
+            // Show/hide error
+            showError(state.error);
+            
+            // Update timestamp
+            elements.updateTime.textContent = state.timestamp ? 
+                new Date(state.timestamp).toLocaleString() : 'Never';
+            
+            // If we have patient data
+            if (state.patientData) {
+                elements.loading.classList.add('d-none');
+                elements.dataState.classList.remove('d-none');
+                
+                // Update patient info
+                elements.patientId.textContent = state.patientData.patient || 'Unknown';
+                
+                // Update status
+                const status = (state.patientData.status || 'unknown').toLowerCase();
+                elements.patientStatus.className = `badge rounded-pill ${
+                    status === 'stable' ? 'bg-success' : 
+                    status === 'critical' ? 'bg-danger' : 'bg-warning'
+                }`;
+                elements.patientStatus.textContent = status.toUpperCase();
+                
+                // Update timestamps
+                elements.readingTime.textContent = state.patientData.timestamp ? 
+                    new Date(state.patientData.timestamp).toLocaleTimeString() : 'Unknown';
+                elements.dataAge.textContent = getTimeSince(state.patientData.timestamp);
+                
+                // Update vitals
+                const vitals = state.patientData.vitals || {};
+                animateValue(elements.heartRate, vitals.heart_rate || '--');
+                animateValue(elements.bloodPressure, vitals.blood_pressure || '--/--');
+                animateValue(elements.spo2, vitals.spo2 || '--');
+                animateValue(elements.temperature, vitals.temp_c || '--');
+            }
+        }
+
+        // Update application state
+        function updateState(newData) {
+            state.timestamp = new Date().toISOString();
+            state.patientData = newData.patientData || null;
+            state.error = newData.error || null;
+            updateUI();
+        }
+
+        // Fetch data from server
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                updateState({
+                    patientData: data.patient_data,
+                    error: data.error
+                });
+            } catch (error) {
+                updateState({
+                    patientData: null,
+                    error: `Connection error: ${error.message}`
+                });
+            }
+        }
+
+        // Initialize
+        initializeTemplateData();
+        fetchData();
+        
+        // Set up periodic refresh
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>
