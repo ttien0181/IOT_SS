@@ -115,17 +115,18 @@
    <!-- div contains all box  -->
   <div id="boxes_container"></div>
 
-  <script>
+<script>
     const socket = io();
     let subscriptions = []; // save list of subscribed topics
 
     // Mapping loại dữ liệu → đơn vị hiển thị
-    const dataUnits = {
-      temperature: "°C",
-      humidity: "%",
-      spo2: "%",
-      heart_rate: "bpm"  
-    };
+    // Chú ý: mapping này không còn cần thiết vì đơn vị đã được server gửi kèm
+    // const dataUnits = {
+    //   temperature: "°C",
+    //   humidity: "%",
+    //   spo2: "%",
+    //   heart_rate: "bpm"  
+    // };
     
     function removeBox(boxId){
       // Xóa box khỏi giao diện
@@ -186,14 +187,19 @@
       container.appendChild(box); // add "box" to "boxes_container"
     });
 
-    socket.on("sensor_update", (data) => { // register callback "sensor_update" with data(from server)
-      subscriptions.forEach(sub => { // each "sub" in "subcriptions"
-        if (data[sub.dataType] !== undefined) { // if data has the key "sub.dataType"
-          const suffix = dataUnits[sub.dataType] || ""; // find the right unit, if not, assign empty string
-          const box = document.getElementById(sub.boxId);// find the correct box
+    socket.on("sensor_update", (data) => { 
+      // Dữ liệu nhận được từ server có dạng: { "data_type": "...", "value": "...", "unit": "..." }
+      
+      subscriptions.forEach(sub => {
+        // Kiểm tra xem data_type nhận được có khớp với loại dữ liệu của box đã subscribe không
+        if (data.data_type === sub.dataType) {
+          const box = document.getElementById(sub.boxId);
           if (box) {
-            box.querySelector(".value_display").innerText = // find the div tag "value_display"
-              data[sub.dataType] + " " + suffix; // replace current content
+            // Lấy giá trị và đơn vị từ đối tượng data
+            const value = data.value;
+            const unit = data.unit || ""; // Dùng đơn vị từ server, nếu không có thì là chuỗi rỗng
+            
+            box.querySelector(".value_display").innerText = `${value} ${unit}`;
           }
         }
       });

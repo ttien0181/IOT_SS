@@ -4,7 +4,7 @@ import smtplib
 import datetime
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.database.connection import get_connection
+from app.database.connection import get_iot02_connection
 
 # gửi email chứa OTP tới người dùng
 def send_verification_email(to_email, otp):
@@ -20,7 +20,7 @@ def send_verification_email(to_email, otp):
 
 # khi nhận yêu cầu đăng ký, sẽ tạo otp (lưu trong bảng tạm), sau đó gửi email chứa OTP tới người dùng
 def request_register(email, password):
-    db = get_connection()
+    db = get_iot02_connection()
     otp = str(random.randint(100000, 999999))
     hashed_pw = generate_password_hash(password)
     expires = datetime.datetime.now() + datetime.timedelta(minutes=5)
@@ -36,7 +36,7 @@ def request_register(email, password):
 
 # xác nhận OTP có đúng ko, nếu đúng thì tạo user
 def confirm_otp(email, otp):
-    db = get_connection()
+    db = get_iot02_connection()
     with db.cursor() as cursor:
         cursor.execute("SELECT * FROM pending_users WHERE email=%s AND otp_code=%s AND expires_at > NOW()", (email, otp))
         row = cursor.fetchone()
@@ -49,7 +49,7 @@ def confirm_otp(email, otp):
 
 # tìm user theo email
 def find_user_by_email(email):
-    db = get_connection()
+    db = get_iot02_connection()
     with db.cursor() as cursor:
         cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         return cursor.fetchone()

@@ -18,14 +18,12 @@
       // Hàm lưu trạng thái menu vào LocalStorage
       function saveMenuState() {
         const openMenus = [];
-        const activeDropdowns = document.querySelectorAll('.dropdown-btn.active');
+        const openDropdowns = document.querySelectorAll('.dropdown-btn.open');
         
-        activeDropdowns.forEach(btn => {
-          // Tạo ID duy nhất cho mỗi button dựa trên text content
+        openDropdowns.forEach(btn => {
           const menuId = btn.textContent.trim().replace(/\s+/g, '_');
           openMenus.push(menuId);
         });
-        
         // Lưu vào LocalStorage
         localStorage.setItem('sidebarMenuState', JSON.stringify(openMenus));
         console.log('Đã lưu trạng thái menu:', openMenus); // Debug
@@ -42,18 +40,15 @@
         try {
           const openMenus = JSON.parse(savedMenus);
           console.log('Khôi phục trạng thái menu:', openMenus); // Debug
-          
           openMenus.forEach(menuId => {
             const buttons = document.querySelectorAll('.dropdown-btn');
             buttons.forEach(btn => {
               const btnId = btn.textContent.trim().replace(/\s+/g, '_');
               if (btnId === menuId) {
-                // Mở menu này
-                btn.classList.add('active');
+                btn.classList.add('open');
                 const dropdownContent = btn.nextElementSibling;
                 if (dropdownContent && dropdownContent.classList.contains('dropdown-container')) {
                   dropdownContent.style.display = 'block';
-                  console.log('Đã mở menu:', menuId); // Debug
                 }
               }
             });
@@ -72,20 +67,18 @@
       var dropdowns = document.getElementsByClassName("dropdown-btn");
       for (var i = 0; i < dropdowns.length; i++) {
         dropdowns[i].addEventListener("click", function() {
-          // Toggle active để đổi màu nút cha khi mở
-          this.classList.toggle("active");
-          // Lấy menu con tương ứng và ẩn/hiện nó
+          // Toggle trạng thái hiển thị
           var dropdownContent = this.nextElementSibling;
-          
-          // nếu đang mở, ẩn đi
+
           if (dropdownContent.style.display === "block") {
             dropdownContent.style.display = "none";
+            this.classList.remove("open");  // bỏ xoay mũi tên
           } else {
-            // nếu đang ẩn, hiện ra
             dropdownContent.style.display = "block";
+            this.classList.add("open");     // xoay mũi tên
           }
-          
-          // LƯU TRẠNG THÁI sau mỗi lần click
+
+          // Lưu trạng thái menu sau mỗi lần click
           saveMenuState();
         });
       }
@@ -113,24 +106,16 @@
        Realtime
     </a>
 
-
     <!-- ========== Tree Menu bắt đầu ========== -->
-    <!-- Nút cha lớn nhất (ví dụ: Building) -->
-    <button class="dropdown-btn">
-      Bach Mai
-    </button>
-
-    <!-- Cây con: Floors -->
+    <!-- Nút cha lớn nhất (ví dụ: Bachmai) -->
+    <button class="dropdown-btn" >Bach Mai</button>
+    <!-- Cây con: Building -->
     <div class="dropdown-container">
-      <!-- Floor 1 -->
-      <button class="dropdown-btn">
-        Building A1
-      </button>
+      <!-- Building A1 -->
+      <button class="dropdown-btn" >Building A1</button>
       <div class="dropdown-container">
         <!-- Floor 1 -->
-        <button class="dropdown-btn">
-          Floor 1
-        </button>
+        <button class="dropdown-btn" >Floor 1</button>
         <div class="dropdown-container">
           <a href="{{ url_for('main.dashboard',building='A1', floor='1', room='101') }}"
             class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '101' %}active{% endif %}">
@@ -143,9 +128,7 @@
         </div>
 
         <!-- Floor 2 -->
-        <button class="dropdown-btn">
-          Floor 2
-        </button>
+        <button class="dropdown-btn" >Floor 2</button>
         <div class="dropdown-container">
           <a href="{{ url_for('main.dashboard',building='A1', floor='2', room='201') }}"
             class="{% if request.endpoint == 'main.dashboard' and request.view_args.get('room') == '201' %}active{% endif %}">
@@ -159,6 +142,7 @@
       </div>    
     </div>
     <!-- ========== Tree Menu kết thúc ========== -->
+     
     <!-- Trang Logout -->
     <a href="{{ url_for('auth.logout') }}" 
        class="{% if request.endpoint == 'auth.logout' %}active{% endif %}">

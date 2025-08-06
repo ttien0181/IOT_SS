@@ -3,8 +3,10 @@ from flask import Flask
 from flask_socketio import SocketIO
 from app.routes.auth_routes import auth_bp
 from app.routes.main_routes import main_bp
-from app.routes.socket_events import register_socket_events
+from app.routes.api_route import api_bp
+from app.sockets.sensor_events import register_socket_events
 from app.services.mqtt_handle import start_mqtt_listener
+
 import threading
 
 socketio = SocketIO()  # Global socketIO object
@@ -16,6 +18,7 @@ def create_app():
     # Đăng ký Blueprint
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(api_bp)
 
     # Khởi tạo SocketIO
     socketio.init_app(app)

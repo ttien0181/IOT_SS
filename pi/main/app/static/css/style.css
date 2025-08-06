@@ -64,11 +64,11 @@ a:hover {
 
 /* Là "pseudo-element" - tạo ra một element ảo DOPO button */
 .sidebar button.dropdown-btn::after {
-  content: '🢗';
+  content: '▼';
   position: absolute;    /* Mũi tên sẽ "nổi" trên button, không ảnh hưởng layout */
   right: 15px;           /* Cách lề phải 15px */
   top: 50%;              /* Đặt ở giữa chiều cao */
-  transform: translateY(-30%);  /* Căn giữa chính xác */
+  transform: translateY(-50%);  /* Căn giữa chính xác */
   /* 
   transition: Tạo hiệu ứng chuyển đổi mượt mà
   transform: Thuộc tính sẽ được animate
@@ -76,14 +76,13 @@ a:hover {
   ease: Kiểu chuyển động (chậm-nhanh-chậm) 
   */
   transition: transform 0.3s ease;
-
 }
 
 /* .active: Khi button có class "active" (menu đang mở)
 rotate(180deg): Xoay mũi tên 180 độ (từ ▼ thành ▲)
 Kết hợp với translateY(-50%): Vừa căn giữa vừa xoay */
-.sidebar button.dropdown-btn.active::after {
-  transform: translateY(-70%) rotate(180deg);
+.sidebar button.dropdown-btn.open::after {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 
@@ -229,7 +228,15 @@ ul {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   text-align: center;
   min-width: 250px;
+  width: 90%;
+  max-width: 900px;
+  /* height: 400px; cố định chiều cao */
   transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .box:hover {
@@ -242,7 +249,7 @@ ul {
   position: absolute;
   top: 8px;
   right: 8px;
-  background-color: #cdf4e4;
+  background-color: #21252a;
   color: white;
   border: none;
   border-radius: 50%;
@@ -258,6 +265,8 @@ ul {
 
 .box .close-btn:hover {
   background-color: #000000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Đổ bóng nhẹ */
+  transform: translateY(-1px); /* Nhấn nổi lên nhẹ */
 }
 
 .box .data_label {

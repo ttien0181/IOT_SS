@@ -2,70 +2,137 @@
 {% block title %}Temperature & Humidity Chart{% endblock %}
 
 {% block content %}
-  <h2>Temperature & Humidity (Last 50)</h2>
 
-  <!-- Khung chứa biểu đồ -->
-  <div class="box" style="width: 90%; max-width: 900px;">
-    <canvas id="myChart"></canvas>
-  </div>
+<!-- Dropdown chọn loại dữ liệu -->
+<h2>Data Chart (Last 50)</h2>
 
-  <!-- Nạp Chart.js từ CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Menu chọn loại dữ liệu -->
+<div style="margin-bottom: 10px;">
+  <label for="dataType">Select Data Type:</label>
+  <select id="dataType">
+    <option value="temperature">Temperature (°C)</option>
+    <option value="humidity">Humidity (%)</option>
+    <option value="pressure">Pressure (hPa)</option>
+    <option value="co2">CO2 (ppm)</option>
+  </select>
 
-  <script>
-    // lấy floor, room từ main_route
-    const building = "{{building}}"
-    const floor = "{{floor}}";
-    const room = "{{room}}";
+  <label for="limit" style="margin-left: 20px;">Number of values:</label>
+  <select id="limit">
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
 
-    // Gửi yêu cầu HTTP GET tới API Flask để lấy dữ liệu JSON 
-    // dùng chuỗi nội suy của JS (phải dùng `` thay vì '' hay "")
-    fetch(`/get_data?building=${building}&floor=${floor}&room=${room}&type=temperature&type=humidity`)
-      .then(r => r.json()) 
-      .then(d => {
-        const ctx = document.getElementById('myChart').getContext('2d');
+</div>
 
-        new Chart(ctx, {
-          type: 'line', // Biểu đồ dạng đường
-          data: {
-            labels: d.labels,
-            datasets: [
-              {
-                label: 'Temp (°C)',
-                data: d.temperature,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-              },
-              {
-                label: 'Humid (%)',
-                data: d.humidity,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-              }
-            ]
-          },
-          options: {
-            interaction: {
-              mode: 'index',
-              intersect: false
-            },
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' }
-            },
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
+<!-- Khung chứa biểu đồ -->
+<div class="box" style="width: 90%; max-width: 900px; height: 90%; max-height: 900px;">
+  <canvas id="myChart"></canvas>
+</div>
+
+
+
+<!-- Nạp Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const building = "{{building}}";
+  const floor = "{{floor}}";
+  const room = "{{room}}";
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  let chart; // để lưu biểu đồ và cập nhật sau
+
+  async function fetchAndDraw(selectedType) {
+    const limit = document.getElementById('limit').value || 50;
+    const res = await fetch(`/api/get_data?building=${building}&floor=${floor}&room=${room}&type=${selectedType}&limit=${limit}`);
+    const d = await res.json();
+
+    // ✅ Thêm log để kiểm tra dữ liệu trả về
+    console.log("Dữ liệu nhận từ server:", d);
+
+    // Nếu đã có biểu đồ, xóa trước khi vẽ mới
+    if (chart) {
+      chart.destroy();
+    }
+
+    // Ép chuỗi sang số
+    const values = d[selectedType].map(v => parseFloat(v));
+
+    console.log("Giá trị sau khi ép số:", values);
+
+    // "...": chuyển 1 mảng thành các phần tử rời để Math.min .max hiểu được
+    // thêm padding để biểu đồ có kích thước vừa phải
+    let padding = Math.max(...values) - Math.min(...values)
+    // thêm padding mặc định khi min==max
+    if (padding === 0) {
+      padding = 1; 
+    }
+    let minY = Math.min(...values) - padding; 
+    let maxY = Math.max(...values) + padding;
+
+
+
+    // Nếu là humidity → nên ép từ 0-100
+    if (selectedType === "humidity") {
+      minY = 0;
+      maxY = 100;
+    }
+
+    // Nếu là CO2 → bắt đầu từ 0 cho dễ nhìn
+    if (selectedType === "co2") {
+      minY = 0;
+    }
+
+
+    console.log("Dataset gửi vào Chart.js:", {
+      labels: d.labels,
+      data: values
+    });
+
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: d.labels,
+        datasets: [{
+          label: selectedType,
+          data: values,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1
+        }]
+      },
+      options: {
+        // responsive: true,
+        // maintainAspectRatio: false, // cho phép canvas cao hơn khi rộng hơn
+        scales: {
+          y: {
+            min: minY,
+            max: maxY
           }
-        });
-      });
-  </script>
+        }
+      }
+    });
+    console.log("Chart đã được tạo:", chart);
+  }
+
+  // Lấy loại dữ liệu đầu tiên khi tải trang
+  const select = document.getElementById('dataType');
+  fetchAndDraw(select.value);
+
+  // Khi thay đổi lựa chọn -> vẽ biểu đồ mới
+  select.addEventListener('change', () => {
+    fetchAndDraw(select.value);
+  });
+
+  // Khi thay đổi số lượng data -> vẽ lại
+  document.getElementById('limit').addEventListener('change', () => {
+    fetchAndDraw(select.value);
+  });
+</script>
+
+
 {% endblock %}
