@@ -9,7 +9,7 @@ const char* password = "SSIoT-02";
 
 // MQTT Broker settings
 // const char* mqtt_server = "5c5eba53f92a499ca18b75d10b64c1b8.s1.eu.hivemq.cloud";
-const char* mqtt_server = "192.168.72.94";
+const char* mqtt_server = "pi102.local";
 const int mqtt_port = 1883;
 // const char* mqtt_user = "dht11_user";
 // const char* mqtt_password = "K6_RR9@M2yr2X4w";
