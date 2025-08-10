@@ -61,7 +61,7 @@
       margin: 0 auto;
       text-align: center;
       background-color: #ffffff;
-      padding: 2rem;
+      padding: 20px;
       border-radius: 16px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
@@ -102,8 +102,6 @@
 
     <label>Data Type:</label>
     <select id="data_type">
-      <option value="temperature">Temperature</option>
-      <option value="humidity">Humidity</option>
       <option value="spo2">SpO2</option>
       <option value="heart_rate">Heartrate</option>
       <option value="motion">Motion</option>
@@ -116,95 +114,103 @@
   <div id="boxes_container"></div>
 
 <script>
-    const socket = io();
-    let subscriptions = []; // save list of subscribed topics
+  const socket = io();
+  let subscriptions = []; // save list of subscribed topics
 
-    // Mapping loại dữ liệu → đơn vị hiển thị
-    // Chú ý: mapping này không còn cần thiết vì đơn vị đã được server gửi kèm
-    // const dataUnits = {
-    //   temperature: "°C",
-    //   humidity: "%",
-    //   spo2: "%",
-    //   heart_rate: "bpm"  
-    // };
-    
-    function removeBox(boxId){
-      // Xóa box khỏi giao diện
-      const box = document.getElementById(boxId);
-      if (box) {
-        box.remove();
-      }
-
-      // Xóa box khỏi danh sách subscriptions
-      subscriptions = subscriptions.filter(sub => sub.boxId !== boxId);
+  // Mapping loại dữ liệu → đơn vị hiển thị
+  // Chú ý: mapping này không còn cần thiết vì đơn vị đã được server gửi kèm
+  // const dataUnits = {
+  //   temperature: "°C",
+  //   humidity: "%",
+  //   spo2: "%",
+  //   heart_rate: "bpm"  
+  // };
+  
+  function removeBox(boxId){
+    // Xóa box khỏi giao diện
+    const box = document.getElementById(boxId);
+    if (box) {
+      box.remove();
     }
 
-    // gán sự kiện cho button "submit"
-    document.getElementById("topic_form").addEventListener("submit", function (e) {
-      e.preventDefault();
+    // Xóa box khỏi danh sách subscriptions
+    subscriptions = subscriptions.filter(sub => sub.boxId !== boxId);
 
-      const building = document.getElementById("building").value;
-      const floor = document.getElementById("floor").value;
-      const room = document.getElementById("room").value;
-      const dataType = document.getElementById("data_type").value;
+    // Gửi yêu cầu unsubscribe tới server
+    socket.emit("unsubscribe_topic", { topic });  
+  }
 
-      // make box Id
-      const boxId = `${building}_${floor}_${room}_${dataType}`;
+  // gán sự kiện cho button "submit"
+  document.getElementById("topic_form").addEventListener("submit", function (e) {
+    e.preventDefault();
 
-      // if this box already exists, skip it
-      if(document.getElementById(boxId)){
-        alert("This box already exists!")
-        return;
-      }
+    const building = document.getElementById("building").value;
+    const floor = document.getElementById("floor").value;
+    const room = document.getElementById("room").value;
+    const dataType = document.getElementById("data_type").value;
 
-      // send subscribe message to server
-      socket.emit("subscribe_topic", {
-        building,
-        floor,
-        room,
-        data_type: dataType
-      });
+    // make box Id
+    const topic = `${building}/${floor}/${room}/${dataType}`;
+    const boxId = topic 
 
-      // { 
-      //   boxId: boxId,
-      //   dataType: dataType
-      // }
-      subscriptions.push({boxId, dataType}) // add to subcription list
+    // if this box already exists, skip it
+    if(document.getElementById(boxId)){
+      alert("This box already exists!")
+      return;
+    }
 
-      // Tạo box mới
-      const container = document.getElementById("boxes_container");// get the HTML element with id = ...
-      const box = document.createElement("div");// create a new HTML element of type <div> using JS
-      box.className = "box";// assign the css class "box" to the newly created div
-      box.id = boxId;// set Id for box
-      // add HTML content inside the box
-      // show dataType, capitalize the first letter
-      // add value_display div
-      box.innerHTML = `
-        <button class="close-btn" onclick="removeBox('${boxId}')">&times;</button>
-        <p class="data_label">${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${building}-${floor}-${room})</p>
-        <div class="value_display">--</div>
-      `;
-      container.appendChild(box); // add "box" to "boxes_container"
+    // send subscribe message to server
+    socket.emit("subscribe_topic", {
+      building,
+      floor,
+      room,
+      data_type: dataType
     });
 
-    socket.on("sensor_update", (data) => { 
-      // Dữ liệu nhận được từ server có dạng: { "data_type": "...", "value": "...", "unit": "..." }
+    // { 
+    //   boxId: boxId,
+    //   dataType: dataType
+    // }
+    subscriptions.push({boxId, topic}) // add to subcription list
+
+    // Tạo box mới
+    const container = document.getElementById("boxes_container");// get the HTML element with id = ...
+    const box = document.createElement("div");// create a new HTML element of type <div> using JS
+    box.className = "box";// assign the css class "box" to the newly created div
+    box.id = boxId;// set Id for box
+    // add HTML content inside the box
+    // show dataType, capitalize the first letter
+    // add value_display div
+    box.innerHTML = `
+      <button class="close-btn" onclick="removeBox('${boxId}')">&times;</button>
+      <p class="data_label">${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${building}-${floor}-${room})</p>
+      <div class="value_display">--</div>
+    `;
+    container.appendChild(box); // add "box" to "boxes_container"
+  });
+
+  socket.on("sensor_update", (data) => { 
+    // Dữ liệu nhận được từ server có dạng: { "data_type": "...", "value": "...", "unit": "..." }
+
+    console.log(`gửi ${data.topic}`)
+    subscriptions.forEach(sub => {
+      console.log(data.topic);
+      console.log(sub.boxId)
       
-      subscriptions.forEach(sub => {
-        // Kiểm tra xem data_type nhận được có khớp với loại dữ liệu của box đã subscribe không
-        if (data.data_type === sub.dataType) {
-          const box = document.getElementById(sub.boxId);
-          if (box) {
-            // Lấy giá trị và đơn vị từ đối tượng data
-            const value = data.value;
-            const unit = data.unit || ""; // Dùng đơn vị từ server, nếu không có thì là chuỗi rỗng
-            
-            box.querySelector(".value_display").innerText = `${value} ${unit}`;
-          }
+      // Kiểm tra xem data_type nhận được có khớp với loại dữ liệu của box đã subscribe không
+      if (data.topic === sub.topic) {
+        const box = document.getElementById(sub.boxId);
+        if (box) {
+          // Lấy giá trị và đơn vị từ đối tượng data
+          const value = data.value;
+          const unit = data.unit || ""; // Dùng đơn vị từ server, nếu không có thì là chuỗi rỗng
+          
+          box.querySelector(".value_display").innerText = `${value} ${unit}`;
         }
-      });
+      }
     });
+  });
 
-  </script>
+</script>
 
 {% endblock %}

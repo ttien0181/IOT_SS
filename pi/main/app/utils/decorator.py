@@ -13,7 +13,7 @@ def login_required(f):
     # *args	Thu thập tất cả đối số không đặt tên (kiểu tuple).
     # **kwargs	Thu thập tất cả đối số có tên (kiểu dictionary).
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session: # nếu chưa đăng nhập thì đưa về /login
+        if 'user_id' not in session: # nếu chưa có session thì đưa về /login
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs) # nếu ok, "trả lại" func gốc
     return decorated_function

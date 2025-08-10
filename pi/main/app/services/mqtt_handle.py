@@ -22,16 +22,6 @@ data_queue = queue.Queue()
 # Biến toàn cục để lưu instance của SocketIO
 _socketio_instance = None
 
-# ------------------------
-# # Xử lý chuỗi topic
-# def parse_topic(topic):
-#     parts = topic.split("/")
-#     if len(parts) >= 6:
-#         _, building, floor, room, sensor_id, data_type = parts
-#         return building, floor, room, sensor_id, data_type
-#     else:
-#         return None, None, None, None, None
-
 # Xử lý chuỗi topic
 def parse_topic(topic):
     parts = topic.split("/")
@@ -42,7 +32,7 @@ def parse_topic(topic):
         return None, None, None, None
 
 
-# ------------------------
+
 # Thread ghi DB
 def db_worker():
     while True:
@@ -64,8 +54,8 @@ def db_worker():
                 conn.close()
             data_queue.task_done()
 
-# ------------------------
-# MQTT Callbacks
+
+# MQTT Callbacks khi bắt đầu kết nối
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("[MQTT] ✅ Kết nối thành công tới Broker")
@@ -75,6 +65,8 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"[MQTT] ❌ Kết nối thất bại, mã lỗi: {rc}")
 
+
+# khi nhận message MQTT
 def on_message(client, userdata, msg):
     global last_db_write_time
     try:
@@ -88,9 +80,7 @@ def on_message(client, userdata, msg):
         unit = payload_data.get("unit") # lấy đơn vị
         sensor_id = payload_data.get("sensor_id") # Lấy sensor_id từ payload
         timestamp = payload_data.get("timestamp") # Lấy timestamp từ payload
-
-
-        
+        # topic = f"{building}/{floor}/{room}/{data_type}"
 
         if not all([building, floor, room, data_type]):
             print(f"[MQTT] Bỏ qua topic không hợp lệ: {msg.topic}")
@@ -100,7 +90,7 @@ def on_message(client, userdata, msg):
 
         # 1️⃣ Đẩy dữ liệu ngay qua Socket.IO
         if _socketio_instance:
-            _socketio_instance.emit("sensor_update", {"data_type": data_type, "value": value, "unit": unit})
+            _socketio_instance.emit("sensor_update", {"topic": msg.topic, "value": value, "unit": unit})
             print("[SocketIO] ✅ Đã phát dữ liệu tới client")
         else:
             print("[SocketIO] ⚠️ Chưa có instance SocketIO")
@@ -117,8 +107,8 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT] ❌ Lỗi xử lý tin nhắn: {e}")
 
-# ------------------------
-# Khởi động MQTT listener
+
+# Khởi động MQTT listener (hàm này dùng để truyền vào Thread để tạo luồng mới)
 def start_mqtt_listener(socketio_instance):
     global _socketio_instance
     _socketio_instance = socketio_instance

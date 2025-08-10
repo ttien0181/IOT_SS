@@ -4,16 +4,14 @@
 {% block content %}
 
 <!-- Dropdown chọn loại dữ liệu -->
-<h2>Data Chart (Last 50)</h2>
+<h2>Data Chart</h2>
 
 <!-- Menu chọn loại dữ liệu -->
 <div style="margin-bottom: 10px;">
   <label for="dataType">Select Data Type:</label>
   <select id="dataType">
-    <option value="temperature">Temperature (°C)</option>
-    <option value="humidity">Humidity (%)</option>
-    <option value="pressure">Pressure (hPa)</option>
-    <option value="co2">CO2 (ppm)</option>
+    <option value="heart_rate">Heartrate (bpm)</option>
+    <option value="spo2">spO2 (%)</option>
   </select>
 
   <label for="limit" style="margin-left: 20px;">Number of values:</label>
@@ -71,18 +69,6 @@
     let minY = Math.min(...values) - padding; 
     let maxY = Math.max(...values) + padding;
 
-
-
-    // Nếu là humidity → nên ép từ 0-100
-    if (selectedType === "humidity") {
-      minY = 0;
-      maxY = 100;
-    }
-
-    // Nếu là CO2 → bắt đầu từ 0 cho dễ nhìn
-    if (selectedType === "co2") {
-      minY = 0;
-    }
 
 
     console.log("Dataset gửi vào Chart.js:", {

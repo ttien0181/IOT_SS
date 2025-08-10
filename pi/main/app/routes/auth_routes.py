@@ -63,6 +63,8 @@ def login():
         if user:
             print("Session before login:", session)
             session['user_id'] = user['id']
+            session['email'] = user['email']
+            session['create_at'] = (user['create_at']).strftime("%Y-%m-%d %H:%M:%S")
             print("Session after login:", session)
             return redirect(url_for('main.index'))
         
@@ -80,4 +82,6 @@ def logout():
     session.clear()
     # Chuyển hướng người dùng về trang đăng nhập
     return redirect(url_for('auth.login'))
+
+
 

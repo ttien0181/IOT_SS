@@ -9,8 +9,9 @@ from app.services.mqtt_handle import start_mqtt_listener
 
 import threading
 
-socketio = SocketIO()  # Global socketIO object
+socketio = SocketIO()  # create Global socketIO object
 
+# tạo ứng dụng
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'your-secret-key'
@@ -28,7 +29,9 @@ def create_app():
 
     # Chạy luồng MQTT
     mqtt_thread = threading.Thread(target=start_mqtt_listener, args=(socketio,))
-    mqtt_thread.daemon = True
+    # Đặt luồng này thành luồng nền (daemon thread) (tức là sẽ tự động kết thúc khi luồng main kết thúc)
+    mqtt_thread.daemon = True 
+    # bắt đầu thực thi luồng
     mqtt_thread.start()
     print("[FLASK] MQTT listener thread đã khởi động.")
 

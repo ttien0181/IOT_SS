@@ -143,6 +143,12 @@
     </div>
     <!-- ========== Tree Menu kết thúc ========== -->
      
+    <!-- Trang Profile -->
+    <a href="{{ url_for('main.profile') }}" 
+       class="{% if request.endpoint == 'main.profile' %}active{% endif %}">
+       Profile
+    </a>
+
     <!-- Trang Logout -->
     <a href="{{ url_for('auth.logout') }}" 
        class="{% if request.endpoint == 'auth.logout' %}active{% endif %}">
