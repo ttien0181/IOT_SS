@@ -1,0 +1,6 @@
+# bỏ qua tất cả các file đuôi .pyc
+*.pyc
+# bỏ qua tất cả các file cache
+__pycache__/
+# bỏ qua thư mục venv
+myvenv/
