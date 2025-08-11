@@ -1,0 +1,4 @@
+# bỏ qua tất cả các file đuôi .pyc
+*.pyc
+# bỏ qua tất cả các file cache
+__pycache__/

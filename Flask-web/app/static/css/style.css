@@ -1,0 +1,304 @@
+/* ====== Reset chung ====== */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f3f3;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2 {
+  color: #333;
+  margin-top: 20px;
+}
+
+a {
+  color: #006558;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ====== Sidebar cố định ====== */
+.sidebar.fixed {
+  width: 220px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #00695c;
+  padding-top: 20px;
+  overflow-x: hidden;
+}
+
+.sidebar-title {
+  color: white;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.sidebar a,
+.sidebar button.dropdown-btn {
+  padding: 12px 20px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #fff;
+  display: block;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;    
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Viền mỏng trắng nhẹ */
+  position: relative; /* Để định vị mũi tên */
+}
+
+/* Hover */
+.sidebar a:hover,
+.sidebar button.dropdown-btn:hover {
+  background-color: #137065;
+}
+
+/* Là "pseudo-element" - tạo ra một element ảo DOPO button */
+.sidebar button.dropdown-btn::after {
+  content: '▼';
+  position: absolute;    /* Mũi tên sẽ "nổi" trên button, không ảnh hưởng layout */
+  right: 15px;           /* Cách lề phải 15px */
+  top: 50%;              /* Đặt ở giữa chiều cao */
+  transform: translateY(-50%);  /* Căn giữa chính xác */
+  /* 
+  transition: Tạo hiệu ứng chuyển đổi mượt mà
+  transform: Thuộc tính sẽ được animate
+  0.3s: Thời gian chuyển đổi 0.3 giây
+  ease: Kiểu chuyển động (chậm-nhanh-chậm) 
+  */
+  transition: transform 0.3s ease;
+}
+
+/* .active: Khi button có class "active" (menu đang mở)
+rotate(180deg): Xoay mũi tên 180 độ (từ ▼ thành ▲)
+Kết hợp với translateY(-50%): Vừa căn giữa vừa xoay */
+.sidebar button.dropdown-btn.open::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+
+/* ====== Active link (mục đang mở) ====== */
+.sidebar a.active,
+.dropdown-container a.active {
+  background-color: #257a6f !important;
+}
+
+/* .dropdown-container > a {
+  padding-left: 35px !important; /* Thụt vào 15px so với level 0 
+} */
+
+/* Menu con khi mở */
+.dropdown-container {
+  display: none;
+  background-color: #00695c;
+
+}
+
+/* Level 1: Building A1 */
+.dropdown-container > a,
+.dropdown-container > .dropdown-btn {
+  padding-left: 35px !important;
+}
+
+/* Level 2: Floor 1, Floor 2 */
+.dropdown-container .dropdown-container > a,
+.dropdown-container .dropdown-container > .dropdown-btn {
+  padding-left: 50px !important;
+}
+
+/* Level 3: Room 101, 102, 201, 202 */
+.dropdown-container .dropdown-container .dropdown-container > a,
+.dropdown-container .dropdown-container .dropdown-container > .dropdown-btn {
+  padding-left: 65px !important;
+}
+
+
+/* Nội dung chính dịch sang phải để tránh đè lên sidebar */
+#main-content-fixed {
+  margin-left: 220px;
+  padding: 20px;
+}
+
+/* ====== Box hiển thị dữ liệu (Realtime Dashboard) ====== */
+.box {
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  display: inline-block;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.value {
+  font-size: 48px;
+  color: #007bff;
+}
+
+/* ====== Form container (Login, Register) ====== */
+.form-container {
+  max-width: 400px;
+  margin: 80px auto;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+form {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 10px;
+  color: #212020 !important;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="number"] {
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+/* Nút chung */
+.btn-primary{
+  margin-top: 20px;
+  background-color: #00695c;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #006558;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Đổ bóng nhẹ */
+  transform: translateY(-1px); /* Nhấn nổi lên nhẹ */
+}
+
+/* Thông báo lỗi */
+ul {
+  padding-left: 20px;
+  color: red;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .sidebar.fixed {
+    width: 180px;
+  }
+
+  #main-content-fixed {
+    margin-left: 180px;
+  }
+
+  .box {
+    width: 90%;
+  }
+}
+
+/* Box hiển thị dữ liệu */
+.box {
+  position: relative; /* để nút đóng định vị được */
+  margin: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  display: inline-block;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #f1f1f1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  min-width: 250px;
+  width: 90%;
+  max-width: 900px;
+  /* height: 400px; cố định chiều cao */
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Nút đóng (X) */
+.box .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #21252a;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 25px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.box .close-btn:hover {
+  background-color: #000000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Đổ bóng nhẹ */
+  transform: translateY(-1px); /* Nhấn nổi lên nhẹ */
+}
+
+.box .data_label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.box .value_display {
+  font-size: 40px;
+  font-weight: bold;
+  color: #212020;
+}
+
+
+select {
+  background-color: #e6f7f4;  /* Màu nền xanh nhạt */
+  font-size: 16px;
+  border: 1px solid #00695c;  /* Viền xanh */
+  color: #212020;                /* Màu chữ */
+  padding: 6px 10px;
+  border-radius: 6px;
+  outline: none;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+select:hover {
+  background-color: #d2f1ec;  /* Nền sáng hơn khi hover */
+  border-color: #004d40;
+}
+
+
+
