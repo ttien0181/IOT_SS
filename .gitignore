@@ -4,3 +4,38 @@
 __pycache__/
 # bỏ qua thư mục venv
 myvenv/
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# Python
+.pytest_cache/
+.coverage
+*.egg-info/
+
+# Logs and dumps
+*.log
+*.sql
+*.sql.gz
+Mobius/log/
+
+# Environment / secrets
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Archives / binaries
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.deb
