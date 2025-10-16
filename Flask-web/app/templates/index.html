@@ -3,112 +3,68 @@
 {% block content %}
 
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f2f6fc;
-      margin: 0;
-      padding: 2rem;
-    }
-
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 2rem;
-    }
-
-    form#topic_form {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1rem;
-      background-color: #ffffff;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-      margin-bottom: 2rem;
-    }
-
-    form label {
-      font-weight: bold;
-      margin-right: 0.5rem;
-      color: #34495e;
-    }
-
-    form select {
-      padding: 0.4rem 0.6rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    /* Custom styles for realtime dashboard */
+    .form-select-custom {
       min-width: 120px;
     }
-
-    form button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.2s;
+    #boxes_container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem 0;
     }
 
-    form button:hover {
-      background-color: #2980b9;
-    }
-
+    /* Override .box styles for cards */
     .box {
-      max-width: 400px;
-      margin: 0 auto;
-      text-align: center;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    #data_label {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 1rem;
-    }
-
-    #value_display {
-      font-size: 3rem;
-      font-weight: bold;
-      color: #e67e22;
+      border: none; /* Bootstrap card handles border */
+      padding: 0; /* Bootstrap card handles padding */
+      margin: 0; /* Bootstrap grid handles margin */
     }
   </style>
 
-  <h1>IoT Realtime Dashboard</h1>
+  <h1 class="mb-4">IoT Realtime Dashboard</h1>
 
-  <form id="topic_form">
-    <label>Building:</label>
-    <select id="building">
-      <option value="A1">A1</option>
-    </select>
+  <div class="card p-4 mb-4 shadow-sm">
+    <form id="topic_form" class="row g-3 align-items-end">
+      <div class="col-md-auto">
+        <label for="building" class="form-label">Building:</label>
+        <select id="building" class="form-select form-select-custom">
+          <option value="A1">A1</option>
+        </select>
+      </div>
 
-    <label>Floor:</label>
-    <select id="floor">
-      <option value="1">1</option>
-      <option value="2">2</option>
-    </select>
+      <div class="col-md-auto">
+        <label for="floor" class="form-label">Floor:</label>
+        <select id="floor" class="form-select form-select-custom">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
 
-    <label>Room:</label>
-    <select id="room">
-      <option value="101">101</option>
-      <option value="102">102</option>
-    </select>
+      <div class="col-md-auto">
+        <label for="room" class="form-label">Room:</label>
+        <select id="room" class="form-select form-select-custom">
+          <option value="101">101</option>
+          <option value="102">102</option>
+        </select>
+      </div>
 
-    <label>Data Type:</label>
-    <select id="data_type">
-      <option value="spo2">SpO2</option>
-      <option value="heart_rate">Heartrate</option>
-      <option value="motion">Motion</option>
-    </select>
+      <div class="col-md-auto">
+        <label for="data_type" class="form-label">Data Type:</label>
+        <select id="data_type" class="form-select form-select-custom">
+          <option value="spo2">SpO2</option>
+          <option value="heart_rate">Heartrate</option>
+          <option value="motion">Motion</option>
+        </select>
+      </div>
 
-    <button type="submit" class="btn-primary">Start</button>
-  </form>
+      <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-plus me-2"></i> Add Sensor
+        </button>
+      </div>
+    </form>
+  </div>
 
    <!-- div contains all box  -->
   <div id="boxes_container"></div>
@@ -116,15 +72,6 @@
 <script>
   const socket = io();
   let subscriptions = []; // save list of subscribed topics
-
-  // Mapping loại dữ liệu → đơn vị hiển thị
-  // Chú ý: mapping này không còn cần thiết vì đơn vị đã được server gửi kèm
-  // const dataUnits = {
-  //   temperature: "°C",
-  //   humidity: "%",
-  //   spo2: "%",
-  //   heart_rate: "bpm"  
-  // };
   
   function removeBox(boxId){
     // Xóa box khỏi giao diện
@@ -136,8 +83,8 @@
     // Xóa box khỏi danh sách subscriptions
     subscriptions = subscriptions.filter(sub => sub.boxId !== boxId);
 
-    // Gửi yêu cầu unsubscribe tới server
-    socket.emit("unsubscribe_topic", { topic });  
+    // Gửi yêu cầu unsubscribe tới server (nếu cần, hiện tại server chưa xử lý)
+    // socket.emit("unsubscribe_topic", { topic });  
   }
 
   // gán sự kiện cho button "submit"
@@ -151,11 +98,11 @@
 
     // make box Id
     const topic = `${building}/${floor}/${room}/${dataType}`;
-    const boxId = topic 
+    const boxId = topic.split('/').join('_'); // Thay đổi / thành _ để làm ID hợp lệ
 
     // if this box already exists, skip it
     if(document.getElementById(boxId)){
-      alert("This box already exists!")
+      alert("This sensor data stream is already displayed!");
       return;
     }
 
@@ -167,43 +114,31 @@
       data_type: dataType
     });
 
-    // { 
-    //   boxId: boxId,
-    //   dataType: dataType
-    // }
-    subscriptions.push({boxId, topic}) // add to subcription list
+    subscriptions.push({boxId, topic}); // add to subcription list
 
     // Tạo box mới
-    const container = document.getElementById("boxes_container");// get the HTML element with id = ...
-    const box = document.createElement("div");// create a new HTML element of type <div> using JS
-    box.className = "box";// assign the css class "box" to the newly created div
-    box.id = boxId;// set Id for box
-    // add HTML content inside the box
-    // show dataType, capitalize the first letter
-    // add value_display div
+    const container = document.getElementById("boxes_container");
+    const box = document.createElement("div");
+    box.className = "box card text-center p-3 shadow-sm"; // Thêm class Bootstrap card
+    box.id = boxId;
+    
     box.innerHTML = `
       <button class="close-btn" onclick="removeBox('${boxId}')">&times;</button>
-      <p class="data_label">${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${building}-${floor}-${room})</p>
-      <div class="value_display">--</div>
+      <p class="data_label card-title mb-2">${dataType.charAt(0).toUpperCase() + dataType.slice(1)} <small class="text-muted">(${building}-${floor}-${room})</small></p>
+      <div class="value_display display-4 fw-bold text-success">--</div>
     `;
-    container.appendChild(box); // add "box" to "boxes_container"
+    container.appendChild(box);
   });
 
   socket.on("sensor_update", (data) => { 
-    // Dữ liệu nhận được từ server có dạng: { "data_type": "...", "value": "...", "unit": "..." }
-
-    console.log(`gửi ${data.topic}`)
+    console.log(`gửi ${data.topic}`);
     subscriptions.forEach(sub => {
-      console.log(data.topic);
-      console.log(sub.boxId)
-      
-      // Kiểm tra xem data_type nhận được có khớp với loại dữ liệu của box đã subscribe không
+      // So khớp topic đầy đủ
       if (data.topic === sub.topic) {
         const box = document.getElementById(sub.boxId);
         if (box) {
-          // Lấy giá trị và đơn vị từ đối tượng data
           const value = data.value;
-          const unit = data.unit || ""; // Dùng đơn vị từ server, nếu không có thì là chuỗi rỗng
+          const unit = data.unit || "";
           
           box.querySelector(".value_display").innerText = `${value} ${unit}`;
         }

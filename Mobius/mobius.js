@@ -5,7 +5,7 @@
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products derived from this software without specific prior written permission.
- * THIS SOFTWA RE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -21,26 +21,29 @@ try {
     conf = JSON.parse(fs.readFileSync('conf.json', 'utf8'));
 }
 catch (e) {
-    conf = {
-        csebaseport: "7579",
-        dbpass: "mobius",
-        dbuser: "root"
-    };
+    conf.csebaseport = "7579";
+    // Default MySQL settings for first run; update conf.json to override
+    conf.dbhost = "localhost";
+    conf.dbuser = "root";
+    conf.dbpass = "mobius";
+    conf.dbname = "mobiusdb";
     fs.writeFileSync('conf.json', JSON.stringify(conf, null, 4), 'utf8');
 }
 
 global.defaultbodytype      = 'json';
 
-// CSE information
-global.usecsetype           = 'in'; // select 'in' or 'mn' or 'asn'
+// my CSE information
+global.usecsetype           = 'in'; // select 'in' or 'mn' or asn'
 global.usecsebase           = 'Mobius';
 global.usecseid             = '/Mobius2';
 global.usecsebaseport       = conf.csebaseport;
 
-global.usedbtype            = 'mariadb'; // Set database type
-global.usedbhost            = '127.0.0.1';
-global.usedbuser            = conf.dbuser || 'root';
-global.usedbpass            = conf.dbpass;
+global.usedbtype = 'mysql'; 
+global.usedbhost = conf.dbhost || 'localhost';
+global.usedbuser = conf.dbuser || 'root';
+global.usedbpass = conf.dbpass || 'mobius';
+global.usedbname = conf.dbname || 'mobiusdb';
+
 
 global.usepxywsport         = '7577';
 global.usepxymqttport       = '7578';
@@ -51,23 +54,24 @@ global.use_hit_man_port     = '7594';
 
 global.usetsagentport       = '7582';
 
-global.use_mqtt_broker      = 'localhost'; // MQTT broker for Mobius
+global.use_mqtt_broker      = 'localhost'; // mqttbroker for mobius
 
 global.use_secure           = 'disable';
 global.use_mqtt_port        = '1883';
-if (global.use_secure === 'enable') {
-    global.use_mqtt_port    = '8883';
+if(use_secure === 'enable') {
+    use_mqtt_port           = '8883';
 }
 
 global.useaccesscontrolpolicy = 'disable';
 
 global.wdt = require('./wdt');
 
+
 global.allowed_ae_ids = [];
-// global.allowed_ae_ids.push('ryeubi');
+//allowed_ae_ids.push('ryeubi');
 
 global.allowed_app_ids = [];
-// global.allowed_app_ids.push('APP01');
+//allowed_app_ids.push('APP01');
 
 global.usesemanticbroker    = '10.10.202.114';
 
@@ -75,5 +79,13 @@ global.uservi = '2a';
 
 global.useCert = 'disable';
 
-// CSE core entry
+
+
+// console.log('Using database type:', global.usedbtype);
+// console.log('Using database host:', global.usedbhost);
+// console.log('Using database user:', global.usedbuser);
+// console.log('Using database password:', global.usedbpass);
+// console.log('Using database name:', global.usedbname);
+
+// CSE core
 require('./app');

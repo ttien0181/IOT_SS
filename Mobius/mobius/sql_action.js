@@ -48,7 +48,7 @@ exports.set_tuning = function(connection, callback) {
                     //return;
                     console.log(results.message);
                 }
-                sql = util.format('set global tx_isolation_isolation=\'READ-UNCOMMITTED\'');
+                sql = util.format('set global transaction_isolation=\'READ-UNCOMMITTED\'');
                 db.getResult(sql, connection, function (err, results) {
                     if(err) {
                         //callback(err, results);

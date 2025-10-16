@@ -33,26 +33,26 @@ def parse_topic(topic):
 
 
 
-# Thread ghi DB
-def db_worker():
-    while True:
-        try:
-            sensor_id, value, data_type = data_queue.get()
-            conn = get_mobiusdb_connection()
-            with conn.cursor() as cur:
-                sql = """
-                    INSERT INTO sensor_data (sensor_id, data_value, data_type, timestamp)
-                    VALUES (%s, %s, %s, NOW())
-                """
-                cur.execute(sql, (sensor_id, value, data_type))
-                conn.commit()
-                print(f"[DB Worker] ✅ Lưu {data_type}={value} từ {sensor_id} vào DB lúc {datetime.now()}")
-        except Exception as e:
-            print(f"[DB Worker] ❌ Lỗi: {e}")
-        finally:
-            if conn:
-                conn.close()
-            data_queue.task_done()
+# # Thread ghi DB
+# def db_worker():
+#     while True:
+#         try:
+#             sensor_id, value, data_type = data_queue.get()
+#             conn = get_mobiusdb_connection()
+#             with conn.cursor() as cur:
+#                 sql = """
+#                     INSERT INTO sensor_data (sensor_id, data_value, data_type, timestamp)
+#                     VALUES (%s, %s, %s, NOW())
+#                 """
+#                 cur.execute(sql, (sensor_id, value, data_type))
+#                 conn.commit()
+#                 print(f"[DB Worker] ✅ Lưu {data_type}={value} từ {sensor_id} vào DB lúc {datetime.now()}")
+#         except Exception as e:
+#             print(f"[DB Worker] ❌ Lỗi: {e}")
+#         finally:
+#             if conn:
+#                 conn.close()
+#             data_queue.task_done()
 
 
 # MQTT Callbacks khi bắt đầu kết nối

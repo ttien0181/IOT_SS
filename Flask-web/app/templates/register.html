@@ -3,38 +3,48 @@
 <head>
   <title>Đăng ký</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
-<body>
+<body class="bg-light">
 
-  <div class="form-container">
-    <h2>Đăng ký tài khoản</h2>
+  <div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="form-container">
+      <h2 class="text-center mb-4">Đăng ký tài khoản</h2>
 
-    <!-- Form đăng ký: gửi email + password -->
-    <form method="POST" action="{{ url_for('auth.register') }}">
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" placeholder="Nhập email của bạn" required>
-
-      <label for="password">Mật khẩu:</label>
-      <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
-
-      <button type="submit" class="btn-primary">Gửi mã xác nhận</button>
-    </form>
-
-    <p>Đã có tài khoản? <a href="{{ url_for('auth.login') }}">Đăng nhập tại đây</a></p>
-
-    <!-- Hiển thị thông báo flash -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash-messages">
-          <ul>
-            {% for message in messages %}
-              <li>{{ message }}</li>
-            {% endfor %}
-          </ul>
+      <!-- Form đăng ký: gửi email + password -->
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="mb-3">
+          <label for="email" class="form-label">Email:</label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="Nhập email của bạn" required>
         </div>
-      {% endif %}
-    {% endwith %}
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Mật khẩu:</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-3">Gửi mã xác nhận</button>
+      </form>
+
+      <p class="text-center mt-3">Đã có tài khoản? <a href="{{ url_for('auth.login') }}">Đăng nhập tại đây</a></p>
+
+      <!-- Hiển thị thông báo flash -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="mt-3">
+            <ul class="list-unstyled">
+              {% for message in messages %}
+                <li class="alert alert-danger">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
   </div>
 
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 # auth_routers.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models.user_model import find_user_by_email, validate_user, request_register, confirm_otp
 
@@ -64,7 +65,12 @@ def login():
             print("Session before login:", session)
             session['user_id'] = user['id']
             session['email'] = user['email']
-            session['create_at'] = (user['create_at']).strftime("%Y-%m-%d %H:%M:%S")
+            created_value = user.get('create_at') or user.get('created_at')
+            if created_value and hasattr(created_value, 'strftime'):
+                created_str = created_value.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                created_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            session['create_at'] = created_str
             print("Session after login:", session)
             return redirect(url_for('main.index'))
         

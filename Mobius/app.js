@@ -129,7 +129,7 @@ if (use_clustering) {
             cluster.fork();
         });
 
-        db.connect(usedbhost, 3306, 'root', usedbpass, (rsc) => {
+        db.connect(usedbhost, 3306, usedbuser, usedbpass, usedbname, (rsc) => {
             if (rsc == '1') {
                 db.getConnection((code, connection) => {
                     if (code === '200') {
@@ -171,7 +171,7 @@ if (use_clustering) {
         });
     }
     else {
-        db.connect(usedbhost, 3306, 'root', usedbpass, (rsc) => {
+        db.connect(usedbhost, 3306, usedbuser, usedbpass, usedbname, (rsc) => {
             if (rsc === '1') {
                 db.getConnection((code, connection) => {
                     if (code === '200') {
@@ -214,7 +214,7 @@ if (use_clustering) {
     }
 }
 else {
-    db.connect(usedbhost, 3306, 'root', usedbpass, (rsc) => {
+    db.connect(usedbhost, 3306, usedbuser, usedbpass, usedbname, (rsc) => {
         if (rsc == '1') {
             db.getConnection((code, connection) => {
                 if (code === '200') {
